@@ -1,8 +1,20 @@
 import asyncio
 import solavis
 from lxml import etree
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 from solavis.core.container import Response
+
+async def parse_html(html):
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, lambda :etree.HTML(html))
+    return result
+
+async def xpath(tree, path):
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, lambda :tree.xpath(path))
+    return result
 
 class GithubSpider(solavis.Spider):
     start_urls = ['https://github.com/jstzwj']
@@ -11,8 +23,8 @@ class GithubSpider(solavis.Spider):
 
     async def parse(self, response:Response, state):
         html = response.text
-        page = etree.HTML(html)
-        following_href = page.xpath("//a[@class='UnderlineNav-item mr-0 mr-md-1 mr-lg-3 ' and contains(text(), 'Following')]/@href")
+        page = parse_html(html)
+        following_href = await xpath(await page, "//a[@class='UnderlineNav-item mr-0 mr-md-1 mr-lg-3 ' and contains(text(), 'Following')]/@href")
         if len(following_href) > 0:
             following_url = following_href[0]
             await self.request("https://github.com" + following_url, self.parse_following)
@@ -20,8 +32,8 @@ class GithubSpider(solavis.Spider):
 
     async def parse_following(self, response, state):
         html = response.text
-        page = etree.HTML(html)
-        following_hrefs = page.xpath("//a[@class='d-inline-block' and @data-hovercard-type='user']/@href")
+        page = parse_html(html)
+        following_hrefs = await xpath(await page, "//a[@class='d-inline-block' and @data-hovercard-type='user']/@href")
         
         tasks = []
         for each_following_href in following_hrefs:
@@ -33,7 +45,7 @@ class GithubSpider(solavis.Spider):
                 )
             print("add following to queue: " + each_following_href)
         
-        await asyncio.gather(tasks)
+        asyncio.wait(tasks)
 
 class MongoPipeline(solavis.Pipeline):
     def __init__(self):

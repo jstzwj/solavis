@@ -2,6 +2,7 @@ import asyncio
 import aiohttp
 import pickle
 import sys
+import time
 
 from solavis.core.pipeline import Pipeline
 from solavis.core.request import MemoryRequestLoader, Request
@@ -24,6 +25,8 @@ class Container(object):
         self.pipelines = []
         self.request_loader = MemoryRequestLoader()
         self.is_exit = False
+        self.crawl_counter = 0
+        self.crawl_time = time.time()
 
     def addSpider(self, spider):
         self.spiders[spider.__class__.__name__] = spider
@@ -52,7 +55,7 @@ class Container(object):
 
         # run spiders
         async with aiohttp.ClientSession() as session:
-            
+
             while True:
                 request = await self.request_loader.load()
                 if request is None:
@@ -62,13 +65,22 @@ class Container(object):
                 if not request.spider_name in self.spiders.keys():
                     print('spider name no found')
                     continue
-
+                
                 response = fetch(session, request.url)
                 spider_method = getattr(self.spiders[request.spider_name], request.method_name)
-
-                print("fetch: "+request.url)
+                
                 crawl_coro = spider_method(await response, pickle.loads(request.state) if request.state is not None else None)
                 asyncio.create_task(crawl_coro)
+                
+                # print speed
+                self.crawl_counter += 1
+                if self.crawl_counter == 10:
+                    print(f"crawl speed: {str(10/(time.time() - self.crawl_time))}r/s")
+                    self.crawl_counter = 0
+                    self.crawl_time = time.time()
+
+                
+
             print('Spider container stopped.')
         # pipeline close
         for each_pipeline, order in self.pipelines:
