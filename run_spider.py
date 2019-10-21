@@ -25,6 +25,7 @@ class GithubSpider(solavis.Spider):
 
     async def parse(self, response:Response):
         html = response.text
+        print(response.status)
         page = parse_html(html)
         following_href = await xpath(await page, "//a[@class='UnderlineNav-item mr-0 mr-md-1 mr-lg-3 ' and contains(text(), 'Following')]/@href")
         if len(following_href) > 0:
@@ -71,8 +72,7 @@ if __name__ == "__main__":
     mongo_pipeline = MongoPipeline()
     container = solavis.Container()
 
-
-    container.set_delay(5)
+    container.set_delay(50)
     container.set_random_delay(True)
     container.add_spider(github_spider)
     container.add_pipeline(mongo_pipeline, 1)

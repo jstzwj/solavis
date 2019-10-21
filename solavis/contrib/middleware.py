@@ -6,11 +6,11 @@ class DepthMiddleware(Middleware):
         pass
 
     async def process_start_request(self, start_request, spider) -> Request:
-        if start_request.state is None:
-            start_request.state = {}
-            start_request.state['depth'] = 0
+        if start_request.meta is None:
+            start_request.meta = {}
+            start_request.meta['depth'] = 0
         else:
-            start_request.state['depth'] += 1
-            print("url: " + start_request.url + "\n depth: "+ start_request.state['depth'])
+            start_request.meta['depth'] += 1
+            print("url: " + start_request.url + "\n depth: "+ start_request.meta['depth'])
         
         return start_request

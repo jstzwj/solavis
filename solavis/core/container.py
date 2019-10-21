@@ -80,7 +80,7 @@ class Container(object):
                 await asyncio.sleep(random.randint(0, self.delay))
             else:
                 await asyncio.sleep(self.delay)
-
+        
         # middleware start request
         for each_middleware, order in self.middlewares:
             request = await each_middleware.process_start_request(request, self.spiders[request.spider_name])
@@ -94,7 +94,7 @@ class Container(object):
         
         # crawl page
         print("fetch: " + request.url)
-        response.meta = request.state
+        response.meta = request.meta
         self.spiders[request.spider_name].setResponse(response)
         try:
             crawl_coro = spider_method(response)

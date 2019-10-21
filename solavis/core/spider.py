@@ -18,9 +18,9 @@ class Spider(object):
     def setResponse(self, response:Response) -> None:
         self.response = response
 
-    async def request(self, url, method, state=None):
+    async def request(self, url, method, meta=None):
         if self.container is not None:
-            req = Request(url, self.__class__.__name__, method.__name__, state)
+            req = Request(url, self.__class__.__name__, method.__name__, meta)
             # middleware spider output
             for each_middleware, order in self.container.middlewares:
                 req = await each_middleware.process_spider_output(self.response, req, self)
@@ -42,5 +42,5 @@ class Spider(object):
         for each_pipeline, order in self.container.pipelines:
             await each_pipeline.process_item(item)
 
-    async def parse(self, response, state):
+    async def parse(self, response, meta):
         pass
