@@ -5,18 +5,20 @@ import sys
 import time
 
 from solavis.core.pipeline import Pipeline
-from solavis.core.request import MemoryRequestLoader, Request
+from solavis.core.request import Request, RequestLoader
 from solavis.core.middleware import Middleware
+from solavis.core.response import Response
 
-class Response(object):
-    text = None
-
-    def __init__(self):
-        pass
+from solavis.contrib.request import MemoryRequestLoader
 
 async def fetch(session, url:str) -> Response:
     ret = Response()
     async with session.get(url) as response:
+        ret.status = response.status
+        ret.reason = response.reason
+        ret.url = response.url
+        ret.content_type = response.content_type
+        ret.charset = response.charset
         ret.text = await response.text()
         return ret
 
@@ -51,6 +53,9 @@ class Container(object):
 
         self.middlewares.append((middleware, order))
 
+    def setRequestLoader(self, loader:RequestLoader) -> None:
+        self.request_loader = loader
+
     async def dispatch_request(self, request, session):
         if not request.spider_name in self.spiders.keys():
             print('spider name no found')
@@ -58,7 +63,7 @@ class Container(object):
 
         # middleware start request
         for each_middleware, order in self.middlewares:
-            await each_middleware.process_start_requests(request, self.spiders[request.spider_name])
+            request = await each_middleware.process_start_request(request, self.spiders[request.spider_name])
         
         response = await fetch(session, request.url)
         spider_method = getattr(self.spiders[request.spider_name], request.method_name)
@@ -68,20 +73,20 @@ class Container(object):
             await each_middleware.process_spider_input(response, self.spiders[request.spider_name])
         
         print("fetch: " + request.url)
+        response.meta = request.state
         self.spiders[request.spider_name].setResponse(response)
         try:
-            crawl_coro = spider_method(response, pickle.loads(request.state) if request.state is not None else None)
+            crawl_coro = spider_method(response)
             await crawl_coro
         except Exception as e:
             # middleware spider exception
             for each_middleware, order in self.middlewares:
                 await each_middleware.process_spider_exception(response, e, self.spiders[request.spider_name])
 
-
         # print crawl speed
         self.crawl_counter += 1
-        if self.crawl_counter == 10:
-            print(f"crawl speed: {str(10/(time.time() - self.crawl_time + 0.0001))}q/s")
+        if self.crawl_counter == 100:
+            print(f"crawl speed: {str(100/(time.time() - self.crawl_time + 0.00001))}q/s")
             self.crawl_counter = 0
             self.crawl_time = time.time()
     

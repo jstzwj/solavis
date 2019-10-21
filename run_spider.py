@@ -4,7 +4,9 @@ from lxml import etree
 from concurrent.futures import ThreadPoolExecutor
 import time
 
-from solavis.core.container import Response
+from solavis.core.response import Response
+
+from solavis.contrib.middleware import DepthMiddleware
 
 async def parse_html(html):
     loop = asyncio.get_event_loop()
@@ -21,16 +23,16 @@ class GithubSpider(solavis.Spider):
     def __init__(self):
         pass
 
-    async def parse(self, response:Response, state):
+    async def parse(self, response:Response):
         html = response.text
         page = parse_html(html)
         following_href = await xpath(await page, "//a[@class='UnderlineNav-item mr-0 mr-md-1 mr-lg-3 ' and contains(text(), 'Following')]/@href")
         if len(following_href) > 0:
             following_url = following_href[0]
             await self.request("https://github.com" + following_url, self.parse_following)
-            print("add user to queue: " + following_url)
+            # print("add user to queue: " + following_url)
 
-    async def parse_following(self, response, state):
+    async def parse_following(self, response):
         html = response.text
         page = parse_html(html)
         following_hrefs = await xpath(await page, "//a[@class='d-inline-block' and @data-hovercard-type='user']/@href")
@@ -43,7 +45,7 @@ class GithubSpider(solavis.Spider):
             tasks.append(
                 asyncio.create_task(self.request("https://github.com" + each_following_href, self.parse))
                 )
-            print("add following to queue: " + each_following_href)
+            # print("add following to queue: " + each_following_href)
         if len(tasks) > 0:
             await asyncio.wait(tasks)
 
@@ -71,5 +73,6 @@ if __name__ == "__main__":
 
     container.addSpider(github_spider)
     container.addPipeline(mongo_pipeline, 1)
+    # container.addMiddleware(DepthMiddleware(), 1)
     
     container.run()

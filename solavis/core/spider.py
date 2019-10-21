@@ -1,8 +1,10 @@
 import pickle
 
 from solavis.core.container import Container
-from solavis.core.request import MemoryRequestLoader, Request
-from solavis.core.container import Response
+from solavis.core.request import Request
+from solavis.core.response import Response
+
+from solavis.contrib.request import MemoryRequestLoader
 
 class Spider(object):
     def __init__(self):
@@ -16,12 +18,12 @@ class Spider(object):
     def setResponse(self, response:Response) -> None:
         self.response = response
 
-    async def request(self, url, method, state = None):
+    async def request(self, url, method, state=None):
         if self.container is not None:
-            req = Request(url, self.__class__.__name__, method.__name__, pickle.dumps(state))
+            req = Request(url, self.__class__.__name__, method.__name__, state)
             # middleware spider output
             for each_middleware, order in self.container.middlewares:
-                await each_middleware.process_spider_output(self.response, req, self)
+                req = await each_middleware.process_spider_output(self.response, req, self)
 
             # save request
             await self.container.request_loader.save(req)
@@ -34,7 +36,7 @@ class Spider(object):
 
         # middleware spider output
         for each_middleware, order in self.container.middlewares:
-            await each_middleware.process_spider_output(self.response, item, self)
+            item = await each_middleware.process_spider_output(self.response, item, self)
 
         # pipeline
         for each_pipeline, order in self.container.pipelines:
