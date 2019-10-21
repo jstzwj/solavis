@@ -71,8 +71,8 @@ if __name__ == "__main__":
     mongo_pipeline = MongoPipeline()
     container = solavis.Container()
 
-    container.addSpider(github_spider)
-    container.addPipeline(mongo_pipeline, 1)
-    # container.addMiddleware(DepthMiddleware(), 1)
+    container.add_spider(github_spider)
+    container.add_pipeline(mongo_pipeline, 1)
+    # container.add_middleware(DepthMiddleware(), 1)
     
     container.run()

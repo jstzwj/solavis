@@ -34,10 +34,10 @@ class Container(object):
         self.scrape_counter = 0
         self.scrape_time = time.time()
 
-    def addSpider(self, spider):
+    def add_spider(self, spider):
         self.spiders[spider.__class__.__name__] = spider
 
-    def addPipeline(self, pipeline:Pipeline, order:int) -> None:
+    def add_pipeline(self, pipeline:Pipeline, order:int) -> None:
         for i in range(len(self.pipelines)):
             if self.pipelines[i][1] >= order:
                 self.pipelines.insert(i, (pipeline, order))
@@ -45,7 +45,7 @@ class Container(object):
 
         self.pipelines.append((pipeline, order))
 
-    def addMiddleware(self, middleware:Middleware, order:int) -> None:
+    def add_middleware(self, middleware:Middleware, order:int) -> None:
         for i in range(len(self.middlewares)):
             if self.middlewares[i][1] >= order:
                 self.middlewares.insert(i, (middleware, order))
@@ -53,7 +53,7 @@ class Container(object):
 
         self.middlewares.append((middleware, order))
 
-    def setRequestLoader(self, loader:RequestLoader) -> None:
+    def set_request_loader(self, loader:RequestLoader) -> None:
         self.request_loader = loader
 
     async def dispatch_request(self, request, session):
