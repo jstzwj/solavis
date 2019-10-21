@@ -44,8 +44,8 @@ class GithubSpider(solavis.Spider):
                 asyncio.create_task(self.request("https://github.com" + each_following_href, self.parse))
                 )
             print("add following to queue: " + each_following_href)
-        
-        asyncio.wait(tasks)
+        if len(tasks) > 0:
+            await asyncio.wait(tasks)
 
 class MongoPipeline(solavis.Pipeline):
     def __init__(self):
@@ -58,7 +58,8 @@ class MongoPipeline(solavis.Pipeline):
         pass
 
     async def process_item(self, item):
-        print(item)
+        # print(item)
+        pass
 
 if __name__ == "__main__":
     import signal
