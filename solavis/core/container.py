@@ -3,6 +3,7 @@ import aiohttp
 import pickle
 import sys
 import time
+import random
 
 from solavis.core.pipeline import Pipeline
 from solavis.core.request import Request, RequestLoader
@@ -11,9 +12,12 @@ from solavis.core.response import Response
 
 from solavis.contrib.request import MemoryRequestLoader
 
-async def fetch(session, url:str) -> Response:
+async def fetch(session, url:str, meta) -> Response:
     ret = Response()
-    async with session.get(url) as response:
+    proxy_info = None
+    if meta is not None:
+        proxy_info = meta['proxy']
+    async with session.get(url, proxy=proxy_info) as response:
         ret.status = response.status
         ret.reason = response.reason
         ret.url = response.url
@@ -29,6 +33,10 @@ class Container(object):
         self.middlewares = []
         self.request_loader = MemoryRequestLoader()
         self.is_exit = False
+
+        self.delay = 0
+        self.random_delay = False
+
         self.crawl_counter = 0
         self.crawl_time = time.time()
         self.scrape_counter = 0
@@ -56,22 +64,35 @@ class Container(object):
     def set_request_loader(self, loader:RequestLoader) -> None:
         self.request_loader = loader
 
+    def set_delay(self, t:int) -> None:
+        self.delay = t
+
+    def set_random_delay(self, cond:bool) -> None:
+        self.random_delay = cond
+
     async def dispatch_request(self, request, session):
         if not request.spider_name in self.spiders.keys():
             print('spider name no found')
             return
 
+        if self.delay != 0:
+            if self.random_delay:
+                await asyncio.sleep(random.randint(0, self.delay))
+            else:
+                await asyncio.sleep(self.delay)
+
         # middleware start request
         for each_middleware, order in self.middlewares:
             request = await each_middleware.process_start_request(request, self.spiders[request.spider_name])
         
-        response = await fetch(session, request.url)
+        response = await fetch(session, request.url, request.meta)
         spider_method = getattr(self.spiders[request.spider_name], request.method_name)
 
         # middleware spider input
         for each_middleware, order in self.middlewares:
             await each_middleware.process_spider_input(response, self.spiders[request.spider_name])
         
+        # crawl page
         print("fetch: " + request.url)
         response.meta = request.state
         self.spiders[request.spider_name].setResponse(response)
