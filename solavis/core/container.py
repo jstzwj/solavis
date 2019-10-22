@@ -116,7 +116,7 @@ class Container(object):
         # print crawl speed
         self.crawl_counter += 1
         if self.crawl_counter == 100:
-            print(f"crawl speed: {str(100/(time.time() - self.crawl_time + 0.00001))}q/s")
+            self.logger.info(f"crawl speed: {str(100/(time.time() - self.crawl_time + 0.00001))}q/s")
             self.crawl_counter = 0
             self.crawl_time = time.time()
     
@@ -125,10 +125,13 @@ class Container(object):
         for spider_name, each_spider in self.spiders.items():
             each_spider.setContainer(self)
 
+        # call spiders open
+        for spider_name, each_spider in self.spiders.items():
+            await self.request_loader.process_spider_open(each_spider)
+        
         # preload urls
         for spider_name, each_spider in self.spiders.items():
-            for each_url in each_spider.start_urls:
-                await self.request_loader.save(Request(each_url, spider_name, 'parse', None))
+            await self.request_loader.save_start_urls(each_spider)
 
         # pipeline init
         for each_pipeline, order in self.pipelines:
@@ -150,6 +153,10 @@ class Container(object):
         # pipeline close
         for each_pipeline, order in self.pipelines:
             await each_pipeline.close_spider()
+
+        # call spiders close
+        for spider_name, each_spider in self.spiders.items():
+            await self.request_loader.process_spider_close(each_spider)
     
     def run(self):
         loop = asyncio.get_event_loop()

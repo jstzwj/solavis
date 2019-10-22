@@ -16,6 +16,15 @@ class RequestLoader(object):
     
     async def save(self, req:Request):
         pass
+
+    async def save_start_urls(self, spider):
+        for each_url in spider.start_urls:
+            await self.save(Request(each_url, spider.__class__.__name__, 'parse'))
     
+    async def process_spider_open(self, spider):
+        pass
+    
+    async def process_spider_close(self, spider):
+        pass
 
     
