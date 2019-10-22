@@ -40,6 +40,10 @@ class Container(object):
     def add_spider(self, spider):
         self.spiders[spider.__class__.__name__] = spider
 
+    def remove_spider(self, spider_name):
+        if spider_name in self.spiders.keys():
+            del self.spiders[spider_name]
+
     def add_pipeline(self, pipeline:Pipeline, order:int) -> None:
         for i in range(len(self.pipelines)):
             if self.pipelines[i][1] >= order:
