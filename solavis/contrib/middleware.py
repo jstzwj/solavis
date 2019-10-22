@@ -14,3 +14,4 @@ class DepthMiddleware(Middleware):
             print("url: " + start_request.url + "\n depth: "+ start_request.meta['depth'])
         
         return start_request
+

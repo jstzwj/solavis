@@ -4,6 +4,7 @@ import pickle
 import sys
 import time
 import random
+import logging
 
 from solavis.core.pipeline import Pipeline
 from solavis.core.request import Request, RequestLoader
@@ -27,12 +28,13 @@ async def fetch(session, url:str, meta) -> Response:
         return ret
 
 class Container(object):
-    def __init__(self):
+    def __init__(self, log_path = None):
         self.spiders = {}
         self.pipelines = []
         self.middlewares = []
         self.request_loader = MemoryRequestLoader()
-        self.is_exit = False
+        self.log_path = log_path
+        self.logger = None
 
         self.delay = 0
         self.random_delay = False
@@ -41,6 +43,13 @@ class Container(object):
         self.crawl_time = time.time()
         self.scrape_counter = 0
         self.scrape_time = time.time()
+
+        if self.log_path is None:
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        else:
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', filename=self.log_path)
+
+        self.logger = logging.getLogger(__name__)
 
     def add_spider(self, spider):
         self.spiders[spider.__class__.__name__] = spider
@@ -72,7 +81,7 @@ class Container(object):
 
     async def dispatch_request(self, request, session):
         if not request.spider_name in self.spiders.keys():
-            print('spider name no found')
+            self.logger.warning(f'spider name {request.spider_name} no found')
             return
 
         if self.delay != 0:
@@ -93,7 +102,7 @@ class Container(object):
             await each_middleware.process_spider_input(response, self.spiders[request.spider_name])
         
         # crawl page
-        print("fetch: " + request.url)
+        self.logger.info(f'fetch: {request.url}')
         response.meta = request.meta
         self.spiders[request.spider_name].setResponse(response)
         try:
@@ -132,12 +141,12 @@ class Container(object):
                 request = await self.request_loader.load()
                 if request is None:
                     await asyncio.sleep(1)
-                    print('no new requests')
+                    self.logger.info('no new requests')
                     continue
 
                 asyncio.create_task(self.dispatch_request(request, session))
 
-            print('Spider container stopped.')
+            self.logger.info('Spider container stopped.')
         # pipeline close
         for each_pipeline, order in self.pipelines:
             await each_pipeline.close_spider()

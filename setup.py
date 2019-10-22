@@ -11,12 +11,11 @@ setup(name='solavis',
       keywords="crawler",
       url='https://github.com/jstzwj/solavis.git',
       packages=['solavis',
-            'solavis.core'],
+            'solavis.core',
+            'solavis.contrib'],
       install_requires=[
             'lxml==4.3.3',
             'requests==2.21.0',
-            'pytest==5.2.1',
-            'pytest-cov==2.8.1',
             'aiohttp==3.6.2'
       ],
      )
