@@ -15,3 +15,10 @@ class DepthMiddleware(Middleware):
         
         return start_request
 
+class BloomfilterMiddleware(Middleware):
+    def __init__(self):
+        pass
+
+    async def process_start_request(self, start_request, spider) -> Request:
+        pass
+
