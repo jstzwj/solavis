@@ -5,20 +5,34 @@ class DepthMiddleware(Middleware):
     def __init__(self):
         pass
 
-    async def process_start_request(self, start_request, spider) -> Request:
-        if start_request.meta is None:
-            start_request.meta = {}
-            start_request.meta['depth'] = 0
+    async def process_request(self, request, spider):
+        if request.meta is None:
+            request.meta = {}
+            request.meta['depth'] = 0
         else:
-            start_request.meta['depth'] += 1
-            print("url: " + start_request.url + "\n depth: "+ start_request.meta['depth'])
+            request.meta['depth'] += 1
+            print("url: " + request.url + "\n depth: "+ request.meta['depth'])
         
-        return start_request
+        return request
+
+class HttpProxyMiddleware(Middleware):
+    def __init__(self):
+        pass
+
+    async def process_request(self, request, spider):
+        pass
+
+class RedirectMiddleware(Middleware):
+    def __init__(self):
+        pass
+
+    async def process_request(self, request, spider):
+        pass
 
 class BloomfilterMiddleware(Middleware):
     def __init__(self):
         pass
 
-    async def process_start_request(self, start_request, spider) -> Request:
+    async def process_request(self, request, spider):
         pass
 

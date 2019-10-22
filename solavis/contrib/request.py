@@ -82,6 +82,7 @@ class SqliteRequestLoader(RequestLoader):
                 (?,?,?,?);
             ''', self.save_buffer)
             await self.connection.commit()
+            self.save_buffer.clear()
 
     async def save_start_urls(self, spider):
         cursor = await self.connection.execute("SELECT count(*) FROM requests;")
