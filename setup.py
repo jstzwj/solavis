@@ -3,7 +3,7 @@
 import setuptools
 
 setuptools.setup(name='solavis',
-      version='0.1a1.dev002',
+      version='0.1a1.dev003',
       description='lightweight async crawler framework',
       author='JunWang',
       author_email='jstzwj@aliyun.com',
