@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 import setuptools
-from distutils.core import setup
 
-setup(name='solavis',
-      version='0.1a1.dev001',
+setuptools.setup(name='solavis',
+      version='0.1a1.dev002',
       description='lightweight async crawler framework',
       author='JunWang',
       author_email='jstzwj@aliyun.com',
