@@ -36,3 +36,10 @@ class BloomfilterMiddleware(Middleware):
     async def process_request(self, request, spider):
         pass
 
+class RedisFilterMiddleware(Middleware):
+    def __init__(self):
+        pass
+
+    async def process_request(self, request, spider):
+        pass
+

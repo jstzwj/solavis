@@ -6,6 +6,7 @@ import time
 import random
 import logging
 
+from solavis.core.spider import Spider
 from solavis.core.pipeline import Pipeline
 from solavis.core.request import Request, RequestLoader
 from solavis.core.middleware import Middleware, HttpMiddleware
@@ -38,9 +39,13 @@ class Container(object):
         self.logger = logging.getLogger(__name__)
 
     def add_spider(self, spider):
+        if not issubclass(type(spider), Spider):
+            raise RuntimeError("Type of spider parameter shall be a subclass of solavis.core.Spider.")
         self.spiders[spider.__class__.__name__] = spider
 
     def remove_spider(self, spider_name):
+        if type(spider_name) != str:
+            raise RuntimeError("Type of spider_name parameter shall be a string.")
         if spider_name in self.spiders.keys():
             del self.spiders[spider_name]
 
