@@ -26,7 +26,6 @@ class Spider(object):
     async def save(self, item):
         if self.container is None:
             print('The spider is called before added to container!')
-
         # pipeline
         for each_pipeline, order in self.container.pipelines:
             await each_pipeline.process_item(item)

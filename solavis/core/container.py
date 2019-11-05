@@ -39,7 +39,7 @@ class Container(object):
         self.logger = logging.getLogger(__name__)
 
     def add_spider(self, spider):
-        if not issubclass(type(spider), solavis.core.Spider):
+        if not issubclass(type(spider), solavis.core.spider.Spider):
             raise RuntimeError("Type of spider parameter shall be a subclass of solavis.core.Spider.")
         self.spiders[spider.__class__.__name__] = spider
 
@@ -78,12 +78,6 @@ class Container(object):
         if not request.spider_name in self.spiders.keys():
             self.logger.warning(f'spider name {request.spider_name} no found')
             return
-
-        if self.delay != 0:
-            if self.random_delay:
-                await asyncio.sleep(random.randint(0, self.delay))
-            else:
-                await asyncio.sleep(self.delay)
         
         response = None
         # middleware start request
@@ -106,12 +100,14 @@ class Container(object):
                 break
             elif type(request_or_response) == Response:
                 response = request_or_response
-
+        # log
+        self.logger.info(f'{request.spider_name}:{request.method_name}:{request.url}')
         # dispatch to spider
         try:
             spider_method = getattr(self.spiders[request.spider_name], request.method_name)
             await spider_method(response)
         except Exception as e:
+            self.logger.warning(f'Exception: {str(e)}')
             # middleware spider exception
             for each_middleware, order in self.middlewares:
                 await each_middleware.process_exception(response, e, self.spiders[request.spider_name])
@@ -146,10 +142,16 @@ class Container(object):
 
         # run spiders
         while True:
+            if self.delay != 0:
+                if self.random_delay:
+                    await asyncio.sleep(random.randint(0, self.delay))
+                else:
+                    await asyncio.sleep(self.delay)
+
             request = await self.request_loader.load()
             if request is None:
                 await asyncio.sleep(1)
-                self.logger.info('no new requests')
+                # self.logger.info('no new requests')
                 continue
 
             asyncio.create_task(self.dispatch_request(request))
