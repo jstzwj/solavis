@@ -66,15 +66,23 @@ class Container(object):
         self.middlewares.append((middleware, order))
 
     def set_request_loader(self, loader:RequestLoader) -> None:
+        if type(loader) != RequestLoader:
+            raise RuntimeError("set_request_loader: loader shall be type of bool")
         self.request_loader = loader
 
     def set_delay(self, t:int) -> None:
-        self.delay = t
+        if t >= 0:
+            self.delay = t
 
     def set_random_delay(self, cond:bool) -> None:
+        if type(cond) != bool:
+            raise RuntimeError("set_random_delay: cond shall be type of bool")
         self.random_delay = cond
 
     async def dispatch_request(self, request):
+        if type(request) != Request:
+            raise RuntimeError("dispatch_request: request shall be type of Request")
+
         if not request.spider_name in self.spiders.keys():
             self.logger.warning(f'spider name {request.spider_name} no found')
             return

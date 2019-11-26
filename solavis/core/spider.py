@@ -12,6 +12,8 @@ class Spider(object):
         self.container = None
 
     def setContainer(self, container:Container) -> None:
+        if type(container) != Container:
+            raise RuntimeError("setContainer: container shall be type of Container")
         self.container = container
 
     async def request(self, url, method, meta=None):
