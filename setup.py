@@ -17,7 +17,7 @@ setuptools.setup(name='solavis',
       install_requires=[
             'lxml==4.3.3',
             'requests==2.21.0',
-            'aiohttp==3.6.2',
+            'aiohttp==3.7.4',
             'aiosqlite==0.10.0'
       ],
       python_requires='>=3.7',
